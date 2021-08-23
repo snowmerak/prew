@@ -26,4 +26,6 @@ install and remove command is record or delete dependencies in spec.yaml.
 
 `prew run`
 
-this command is run python code in current path.
+this command is run python code in current path.  
+
+when run this command, it will install dependencies in spec.yaml.
