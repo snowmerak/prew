@@ -1,11 +1,30 @@
 package main
 
 import (
-	"encoding/json"
+	"fmt"
+	"log"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
+
+func runPythonCode(spec Spec) error {
+	pw, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	src := filepath.Join(pw, "src", spec.EntryFile)
+	app := exec.Command(python, src)
+	app.Stdin = os.Stdin
+	app.Stdout = os.Stdout
+	app.Stderr = os.Stderr
+	if err := app.Run(); err != nil {
+		return err
+	}
+	return nil
+}
 
 func getPythonVersion() (string, error) {
 	bs, err := exec.Command(python, "-V").Output()
@@ -15,107 +34,59 @@ func getPythonVersion() (string, error) {
 	return strings.Split(strings.Trim(string(bs), "\n"), " ")[1], nil
 }
 
-func convertToPythonVersion(s string) [3]int {
-	v := [3]int{0, 0, 0}
-	sp := strings.Split(strings.TrimSpace(s), ".")
-	var err error = nil
-	for c, i := range sp {
-		v[c], err = strconv.Atoi(i)
-		if err != nil {
-			return [3]int{0, 0, 0}
-		}
+func installPackage(name, version string) error {
+	cmd := exec.Command(python)
+	if version != "" {
+		cmd.Args = append(cmd.Args, "-m", "pip", "install", fmt.Sprintf("%v==%v", name, version))
+	} else {
+		cmd.Args = append(cmd.Args, "-m", "pip", "install", name)
 	}
-	return v
-}
-
-func checkValidVersion(v [3]int, s [3]int) bool {
-	for c := range v {
-		if v[c] < s[c] {
-			return false
-		}
-	}
-	return true
-}
-
-func installPackage(name string) error {
-	_, err := exec.Command(python, "-m", "pip", "install", name).Output()
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
 	if err != nil {
 		return err
 	}
+	log.Println(name, version, "installed")
 	return nil
-}
-
-func installPackages(packages []string) error {
-	for _, p := range packages {
-		err := installPackage(p)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-type PythonPackage struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
-}
-
-func getInstalledPackageList() []PythonPackage {
-	bs, err := exec.Command(python, "-m", "pip", "list", "--format=json", "--no-index").Output()
-	if err != nil {
-		return nil
-	}
-	var packages []PythonPackage
-	err = json.Unmarshal(bs, &packages)
-	if err != nil {
-		return nil
-	}
-	return packages
-}
-
-func stringToPythonVersion(s string) [3]int {
-	v := [3]int{0, 0, 0}
-	sp := strings.Split(strings.TrimSpace(s), ".")
-	var err error = nil
-	for c, i := range sp {
-		v[c], err = strconv.Atoi(i)
-		if err != nil {
-			return [3]int{0, 0, 0}
-		}
-	}
-	return v
 }
 
 func removePackage(name string) error {
-	_, err := exec.Command(python, "-m", "pip", "uninstall", name).Output()
+	cmd := exec.Command(python, "-m", "pip", "uninstall", name)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
 	if err != nil {
 		return err
 	}
+	log.Println(name, "uninstalled")
 	return nil
 }
 
-func removePackages(packages []string) error {
-	for _, p := range packages {
-		err := removePackage(p)
+func convertVersionToIntArray(version string) [3]int {
+	v := [3]int{0, 0, 0}
+	s := strings.Split(strings.TrimSpace(version), ".")
+	var err error = nil
+	for i := 0; i < 3; i++ {
+		v[i], err = strconv.Atoi(s[i])
 		if err != nil {
-			return err
+			return v
 		}
 	}
-	return nil
+	return v
 }
 
-func installPackageVersion(name string, version [3]int) error {
-	err := installPackage(combinePackageNameVersion(name, version))
-	if err != nil {
-		return err
+func compareVersion(a, b string) int {
+	av := convertVersionToIntArray(a)
+	bv := convertVersionToIntArray(b)
+	for i := 0; i < 3; i++ {
+		if av[i] > bv[i] {
+			return -1
+		} else if av[i] < bv[i] {
+			return 1
+		}
 	}
-	return nil
-}
-
-func combinePackageNameVersion(name string, version [3]int) string {
-	return name + "==" + pythonVersionToString(version)
-}
-
-func pythonVersionToString(v [3]int) string {
-	return strconv.Itoa(v[0]) + "." + strconv.Itoa(v[1]) + "." + strconv.Itoa(v[2])
+	return 0
 }
