@@ -11,6 +11,14 @@ import (
 )
 
 func runPythonCode(spec Spec) error {
+	for _, d := range spec.Dependencies {
+		if e := checkPackage(d.Name, d.Version); e == ExistSameVersion {
+			continue
+		}
+		if err := installPackage(d.Name, d.Version); err != nil {
+			return err
+		}
+	}
 	pw, err := os.Getwd()
 	if err != nil {
 		return err
