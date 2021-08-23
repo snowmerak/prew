@@ -1,14 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 )
 
 func initProjectToDirectory(path string) error {
 	spec := makeSpecFromSurvey()
-	fmt.Println(spec)
 	if err := os.MkdirAll(path, 0755); err != nil {
 		return err
 	}
