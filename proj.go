@@ -10,7 +10,7 @@ func initProjectToDirectory(path string) error {
 	if err := os.MkdirAll(path, 0755); err != nil {
 		return err
 	}
-	if err := writeSpecToYaml(filepath.Join(path, "spec.yaml"), spec); err != nil {
+	if err := writeSpecToCurrentPath(spec); err != nil {
 		return err
 	}
 	if err := os.MkdirAll(filepath.Join(path, "src"), 0755); err != nil {
