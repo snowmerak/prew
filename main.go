@@ -11,7 +11,6 @@ func main() {
 	app := kingpin.New("prew", "a python management tool")
 
 	init := app.Command("init", "Initialize a new project")
-	initPath := init.Arg("path", "Path to the project").Required().String()
 
 	install := app.Command("install", "Install a package")
 	installName := install.Arg("name", "Name of the package").Required().String()
@@ -22,12 +21,14 @@ func main() {
 
 	run := app.Command("run", "Run python code")
 
+	restore := app.Command("restore", "Restore a package")
+
 	app.Version("0.0.1")
 
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
 	case init.FullCommand():
-		log.Println("Initializing project in", *initPath)
-		if err := initProjectToDirectory(*initPath); err != nil {
+		log.Println("Initializing project in current path")
+		if err := initProjectToDirectory(); err != nil {
 			log.Fatal(err)
 		}
 	case install.FullCommand():
@@ -64,6 +65,11 @@ func main() {
 			log.Fatal(err)
 		}
 		if err := runPythonCode(spec); err != nil {
+			log.Fatal(err)
+		}
+	case restore.FullCommand():
+		log.Println("Restore project")
+		if err := restoreProject(); err != nil {
 			log.Fatal(err)
 		}
 	default:
