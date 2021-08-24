@@ -5,8 +5,18 @@ import (
 	"path/filepath"
 )
 
-func initProjectToDirectory(path string) error {
+func initProjectToDirectory() error {
+	path, err := os.Getwd()
+	if err != nil {
+		return err
+	}
 	spec := makeSpecFromSurvey()
+	if err := installVirtualEnv(); err != nil {
+		return err
+	}
+	if err := createVirtualEnv(spec.Version); err != nil {
+		return err
+	}
 	if err := os.MkdirAll(path, 0755); err != nil {
 		return err
 	}
@@ -25,6 +35,25 @@ func initProjectToDirectory(path string) error {
 	# Write your code here
 	`); err != nil {
 		return err
+	}
+	return nil
+}
+
+func restoreProject() error {
+	spec, err := readSpecFromCurrentPath()
+	if err != nil {
+		return err
+	}
+	if err := createVirtualEnv(spec.Version); err != nil {
+		return err
+	}
+	for _, d := range spec.Dependencies {
+		if e := checkPackage(d.Name, d.Version); e == ExistSameVersion {
+			continue
+		}
+		if err := installPackage(d.Name, d.Version); err != nil {
+			return err
+		}
 	}
 	return nil
 }
