@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -124,6 +125,7 @@ func subductDependencyFromSpec(spec *Spec, name string) error {
 	for i, d := range spec.Dependencies {
 		if d.Name == name {
 			spec.Dependencies = append(spec.Dependencies[:i], spec.Dependencies[i+1:]...)
+
 			return nil
 		}
 	}
@@ -141,7 +143,7 @@ type PythonPackage struct {
 }
 
 func getInstalledPackageList() []PythonPackage {
-	bs, err := exec.Command(python, "-m", "pip", "list", "--format=json", "--no-index").Output()
+	bs, err := exec.Command(pip3, "list", "--format=json", "--no-index").Output()
 	if err != nil {
 		return nil
 	}
@@ -162,7 +164,11 @@ const (
 
 func checkPackage(name, version string) int {
 	for _, p := range getInstalledPackageList() {
+		fmt.Println(p.Name, name)
 		if p.Name == name {
+			if version == "" {
+				return ExistSameVersion
+			}
 			switch compareVersion(p.Version, version) {
 			case -1:
 				return ExistNewerVersion
