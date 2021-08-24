@@ -19,19 +19,7 @@ func runPythonCode(spec Spec) error {
 			return err
 		}
 	}
-	pw, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	src := filepath.Join(pw, "src", spec.EntryFile)
-	app := exec.Command(python, src)
-	app.Stdin = os.Stdin
-	app.Stdout = os.Stdout
-	app.Stderr = os.Stderr
-	if err := app.Run(); err != nil {
-		return err
-	}
-	return nil
+	return runExecCommand([]string{vpython, filepath.Join("src", spec.EntryFile)})
 }
 
 func getPythonVersion() (string, error) {
@@ -43,11 +31,11 @@ func getPythonVersion() (string, error) {
 }
 
 func installPackage(name, version string) error {
-	cmd := exec.Command(python)
+	cmd := exec.Command(pip3)
 	if version != "" {
-		cmd.Args = append(cmd.Args, "-m", "pip", "install", fmt.Sprintf("%v==%v", name, version))
+		cmd.Args = append(cmd.Args, "install", fmt.Sprintf("%v==%v", name, version))
 	} else {
-		cmd.Args = append(cmd.Args, "-m", "pip", "install", name)
+		cmd.Args = append(cmd.Args, "install", name)
 	}
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -61,7 +49,7 @@ func installPackage(name, version string) error {
 }
 
 func removePackage(name string) error {
-	cmd := exec.Command(python, "-m", "pip", "uninstall", name)
+	cmd := exec.Command(pip3, "uninstall", name)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
