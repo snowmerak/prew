@@ -6,7 +6,7 @@ prew is a simple tool to manage your python code.
 
 ## project init
 
-`prew init <path>`  
+`prew init`  
 
 when prew init this path, create virtualenv.  
 
