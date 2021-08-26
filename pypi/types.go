@@ -3,10 +3,10 @@ package pypi
 import "time"
 
 type Package struct {
-	Info       Info               `json:"info"`
-	LastSerial int                `json:"last_serial"`
-	Releases   map[string]Release `json:"releases"`
-	Urls       []Urls             `json:"urls"`
+	Info       Info                 `json:"info"`
+	LastSerial int                  `json:"last_serial"`
+	Releases   map[string][]Release `json:"releases"`
+	Urls       []Urls               `json:"urls"`
 }
 
 type Downloads struct {

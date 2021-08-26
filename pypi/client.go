@@ -30,7 +30,7 @@ var UserAgent string = "Prew/1.0 (" + runtime.GOOS + "; " + runtime.GOARCH + "; 
 
 func GetPackageInfo(Name string, Version string) (Package, error) {
 	var URL = "https://pypi.org/pypi/" + Name + "/" + Version + "/json"
-	if URL == "" {
+	if Version == "" {
 		URL = "https://pypi.org/pypi/" + Name + "/json"
 	}
 
