@@ -3,24 +3,21 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strings"
 )
 
-func initProjectToDirectory() error {
-	path, err := os.Getwd()
-	if err != nil {
-		return err
-	}
+func initProjectToDirectory(path string) error {
 	spec := makeSpecFromSurvey()
 	if err := installVirtualEnv(); err != nil {
 		return err
 	}
-	if err := createVirtualEnv(spec.Version); err != nil {
+	if err := createVirtualEnv(path, spec.Version); err != nil {
 		return err
 	}
 	if err := os.MkdirAll(path, 0755); err != nil {
 		return err
 	}
-	if err := writeSpecToCurrentPath(spec); err != nil {
+	if err := writeSpecToPath(path, spec); err != nil {
 		return err
 	}
 	if err := os.MkdirAll(filepath.Join(path, "src"), 0755); err != nil {
@@ -36,15 +33,28 @@ func initProjectToDirectory() error {
 	`); err != nil {
 		return err
 	}
-	return nil
-}
-
-func restoreProject() error {
-	spec, err := readSpecFromCurrentPath()
+	ignore, err := os.Create(filepath.Join(path, ".gitignore"))
 	if err != nil {
 		return err
 	}
-	if err := createVirtualEnv(spec.Version); err != nil {
+	defer ignore.Close()
+	if _, err := ignore.WriteString(strings.TrimSpace(`
+	bin
+	lib
+	pyvenv.cfg
+	dockerfile
+	`)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func restoreProject(path string) error {
+	spec, err := readSpecFromPath(path)
+	if err != nil {
+		return err
+	}
+	if err := createVirtualEnv(path, spec.Version); err != nil {
 		return err
 	}
 	for _, d := range spec.Dependencies {
