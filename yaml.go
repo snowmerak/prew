@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"prew/pypi"
 
 	"github.com/AlecAivazis/survey/v2"
 	"gopkg.in/yaml.v2"
@@ -23,13 +24,9 @@ type Dependency struct {
 	Version string `yaml:"version"`
 }
 
-func readSpecFromCurrentPath() (Spec, error) {
+func readSpecFromPath(path string) (Spec, error) {
 	spec := Spec{}
-	pw, err := os.Getwd()
-	if err != nil {
-		return spec, err
-	}
-	path := filepath.Join(pw, "spec.yaml")
+	path = filepath.Join(path, "spec.yaml")
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return spec, err
 	}
@@ -42,12 +39,8 @@ func readSpecFromCurrentPath() (Spec, error) {
 	return spec, err
 }
 
-func writeSpecToCurrentPath(spec Spec) error {
-	pw, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	path := filepath.Join(pw, "spec.yaml")
+func writeSpecToPath(path string, spec Spec) error {
+	path = filepath.Join(path, "spec.yaml")
 	file, err := os.Create(path)
 	if err != nil {
 		return err
@@ -88,7 +81,34 @@ func makeSpecFromSurvey() Spec {
 	return spec
 }
 
-func appendDependencyToSpec(spec *Spec, name, version string) error {
+func selectPackageVersion(name string) (string, error) {
+	version := ""
+	versions := []string{}
+	pack, err := pypi.GetPackageInfo(name, "")
+	if err != nil {
+		return version, err
+	}
+	for k := range pack.Releases {
+		versions = append(versions, k)
+	}
+	prompt := &survey.Select{
+		Message:  "select package version to install:",
+		Options:  versions,
+		PageSize: 13,
+	}
+	survey.AskOne(prompt, &version)
+	return version, nil
+}
+
+func appendDependencyToSpec(spec *Spec, name string) error {
+	version, err := selectPackageVersion(name)
+	if err != nil {
+		return err
+	}
+	path, err := os.Getwd()
+	if err != nil {
+		return err
+	}
 	if e := checkPackage(name, version); e != NotExist {
 		if err := removePackage(name); err != nil {
 			return err
@@ -98,43 +118,60 @@ func appendDependencyToSpec(spec *Spec, name, version string) error {
 		return err
 	}
 
-	for i, d := range spec.Dependencies {
-		if d.Name == name {
-			switch compareVersion(d.Version, version) {
-			case -1:
-				fallthrough
-			case 1:
-				spec.Dependencies[i].Version = version
-				return nil
-			case 0:
-				return nil
+	packages, err := getDependencyTreeFrom(path)
+	if err != nil {
+		return err
+	}
+	list := convertPipPakcageToList(packages)
+	spec.Dependencies = make([]Dependency, len(list))
+	for i, v := range list {
+		spec.Dependencies[i].Name = v.Name
+		spec.Dependencies[i].Version = v.Version
+	}
+	return nil
+}
+
+func selectRemovePackages(spec *Spec) []string {
+	packages := []string{}
+	names := []string{}
+	for _, d := range spec.Dependencies {
+		names = append(names, fmt.Sprintf("%s == %s", d.Name, d.Version))
+	}
+	prompt := &survey.MultiSelect{
+		Message:  "select packages to remove:",
+		Options:  names,
+		PageSize: 13,
+	}
+	survey.AskOne(prompt, &packages)
+	return packages
+}
+
+func subductDependencyFromSpec(spec *Spec) error {
+	selected := selectRemovePackages(spec)
+	for _, v := range selected {
+		if e := checkPackage(v, ""); e != NotExist {
+			fmt.Println(e)
+			if err := removePackage(v); err != nil {
+				return err
 			}
 		}
 	}
 
-	spec.Dependencies = append(spec.Dependencies, Dependency{Name: name, Version: version})
-	return nil
-}
-
-func subductDependencyFromSpec(spec *Spec, name string) error {
-	if e := checkPackage(name, ""); e != NotExist {
-		if err := removePackage(name); err != nil {
-			return err
-		}
+	path, err := os.Getwd()
+	if err != nil {
+		return err
 	}
-	for i, d := range spec.Dependencies {
-		if d.Name == name {
-			spec.Dependencies = append(spec.Dependencies[:i], spec.Dependencies[i+1:]...)
-
-			return nil
-		}
+	packages, err := getDependencyTreeFrom(path)
+	if err != nil {
+		return err
+	}
+	list := convertPipPakcageToList(packages)
+	spec.Dependencies = make([]Dependency, len(list))
+	for i, v := range list {
+		spec.Dependencies[i].Name = v.Name
+		spec.Dependencies[i].Version = v.Version
 	}
 	return nil
-}
-
-type Package struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
 }
 
 type PythonPackage struct {
