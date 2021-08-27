@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -31,6 +32,13 @@ func getPythonVersion() (string, error) {
 }
 
 func installPackage(name, version string) error {
+	path, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	if err := activateVirtualEnv(path); err != nil {
+		return err
+	}
 	cmd := exec.Command(pip3)
 	if version != "" {
 		cmd.Args = append(cmd.Args, "install", fmt.Sprintf("%v==%v", name, version))
@@ -40,7 +48,7 @@ func installPackage(name, version string) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
 		return err
 	}
@@ -85,4 +93,56 @@ func compareVersion(a, b string) int {
 		}
 	}
 	return 0
+}
+
+type PipPackage struct {
+	PackageName      string       `json:"package_name"`
+	InstalledVersion string       `json:"installed_version"`
+	Dependencies     []PipPackage `json:"dependencies"`
+}
+
+func getDependencyTreeFrom(path string) ([]PipPackage, error) {
+	if checkPackage("pipdeptree", "") == NotExist {
+		if err := installPackage("pipdeptree", ""); err != nil {
+			return nil, err
+		}
+	}
+	data, err := exec.Command(vpython, "-m", "pipdeptree", "--json-tree").Output()
+	if err != nil {
+		return nil, err
+	}
+	p := new([]PipPackage)
+	*p = []PipPackage{}
+	if err := json.Unmarshal(data, p); err != nil {
+		return nil, err
+	}
+	return *p, nil
+}
+
+func convertPipPakcageToList(p []PipPackage) []PythonPackage {
+	var packages []PythonPackage = nil
+	queue := make([]PipPackage, len(p))
+	copy(queue, p)
+	cache := map[string]bool{}
+	for len(queue) > 0 {
+		pk := queue[0]
+		queue = queue[1:]
+		packages = append(packages, PythonPackage{
+			Name:    pk.PackageName,
+			Version: pk.InstalledVersion,
+		})
+		queue = append(queue, pk.Dependencies...)
+	}
+	for i := 0; i < len(packages)/2; i++ {
+		packages[i], packages[len(packages)-1-i] = packages[len(packages)-1-i], packages[i]
+	}
+	for i := 0; i < len(packages); i++ {
+		if cache[packages[i].Name] {
+			packages = append(packages[:i], packages[i+1:]...)
+			i--
+			continue
+		}
+		cache[packages[i].Name] = true
+	}
+	return packages
 }
