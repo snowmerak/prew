@@ -38,12 +38,7 @@ func initProjectToDirectory(path string) error {
 		return err
 	}
 	defer ignore.Close()
-	if _, err := ignore.WriteString(strings.TrimSpace(`
-	bin
-	lib
-	pyvenv.cfg
-	dockerfile
-	`)); err != nil {
+	if _, err := ignore.WriteString(strings.TrimSpace("bin\nlib\npyvenv.cfg\ndockerfile")); err != nil {
 		return err
 	}
 	return nil
