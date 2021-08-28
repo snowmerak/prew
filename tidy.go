@@ -136,9 +136,9 @@ func getUnusedPackages(path string) (map[string]bool, map[string]bool, map[strin
 	usedList := map[string]bool{}
 	for _, u := range used {
 		if _, ok := top[u]; !ok {
-			expected[u] = true
+			expected[top[u]] = true
 		} else {
-			usedList[u] = true
+			usedList[top[u]] = true
 		}
 		delete(top, u)
 	}
@@ -194,7 +194,7 @@ func tidyUpProject(path string) error {
 		}
 	}
 	for k := range unused {
-		if !dep[k] {
+		if dep[k] {
 			delete(unused, k)
 		}
 	}
