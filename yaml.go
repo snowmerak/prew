@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"prew/pypi"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"gopkg.in/yaml.v2"
@@ -138,7 +139,9 @@ func selectRemovePackages(spec *Spec) []string {
 
 func subductDependencyFromSpec(spec *Spec) error {
 	selected := selectRemovePackages(spec)
+	fmt.Println(selected)
 	for _, v := range selected {
+		v = strings.Split(v, " == ")[0]
 		if e := checkPackage(v, ""); e != NotExist {
 			fmt.Println(e)
 			if err := removePackage(v); err != nil {
