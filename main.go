@@ -25,7 +25,9 @@ func main() {
 
 	makeDockerfile := app.Command("make-dockerfile", "Create a Dockerfile")
 
-	app.Version("0.0.1")
+	tidy := app.Command("tidy", "Tidy up the project")
+
+	app.Version("0.1.1")
 
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
 	case init.FullCommand():
@@ -76,6 +78,11 @@ func main() {
 	case restore.FullCommand():
 		log.Println("Restore project")
 		if err := restoreProject(*restorePath); err != nil {
+			log.Fatal(err)
+		}
+	case tidy.FullCommand():
+		log.Println("Tidying project")
+		if err := tidyUpProject("."); err != nil {
 			log.Fatal(err)
 		}
 	case makeDockerfile.FullCommand():
