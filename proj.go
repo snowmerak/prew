@@ -57,7 +57,8 @@ func restoreProject(path string) error {
 	if err := createVirtualEnv(path, spec.Version); err != nil {
 		return err
 	}
-	for _, d := range spec.Dependencies {
+	ls := convertPipPakcageToList(spec.Dependencies)
+	for _, d := range ls {
 		if e := checkPackage(d.Name, d.Version); e == ExistSameVersion {
 			continue
 		}
