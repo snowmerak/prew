@@ -14,7 +14,7 @@ func convertSpecToDockerfile(spec *Spec) string {
 	sb.WriteString("COPY src /src\n")
 
 	for _, v := range spec.Dependencies {
-		sb.WriteString("RUN python3 -m pip install " + v.Name + "==" + v.Version + "\n")
+		sb.WriteString("RUN python3 -m pip install " + v.PackageName + "==" + v.InstalledVersion + "\n")
 	}
 
 	sb.WriteString("WORKDIR /src")
