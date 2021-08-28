@@ -6,8 +6,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"prew/pypi"
 	"strings"
+
+	"github.com/snowmerak/prew/pypi"
 
 	"github.com/AlecAivazis/survey/v2"
 	"gopkg.in/yaml.v2"

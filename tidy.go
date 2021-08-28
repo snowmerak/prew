@@ -5,10 +5,11 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"prew/pypi"
 	"regexp"
 	"runtime"
 	"strings"
+
+	"github.com/snowmerak/prew/pypi"
 )
 
 func getFileListRecursive(path string) ([]string, error) {

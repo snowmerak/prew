@@ -1,4 +1,4 @@
-module prew
+module github.com/snowmerak/prew
 
 go 1.16
 
