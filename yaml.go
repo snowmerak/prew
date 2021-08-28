@@ -16,12 +16,7 @@ type Spec struct {
 	Name         string       `yaml:"name"`
 	Version      string       `yaml:"version"`
 	EntryFile    string       `yaml:"entry_file"`
-	Dependencies []Dependency `yaml:"dependencies"`
-}
-
-type Dependency struct {
-	Name    string `yaml:"name"`
-	Version string `yaml:"version"`
+	Dependencies []PipPackage `yaml:"dependencies"`
 }
 
 func readSpecFromPath(path string) (Spec, error) {
@@ -122,12 +117,7 @@ func appendDependencyToSpec(spec *Spec, name string) error {
 	if err != nil {
 		return err
 	}
-	list := convertPipPakcageToList(packages)
-	spec.Dependencies = make([]Dependency, len(list))
-	for i, v := range list {
-		spec.Dependencies[i].Name = v.Name
-		spec.Dependencies[i].Version = v.Version
-	}
+	spec.Dependencies = packages
 	return nil
 }
 
@@ -135,7 +125,7 @@ func selectRemovePackages(spec *Spec) []string {
 	packages := []string{}
 	names := []string{}
 	for _, d := range spec.Dependencies {
-		names = append(names, fmt.Sprintf("%s == %s", d.Name, d.Version))
+		names = append(names, fmt.Sprintf("%s == %s", d.PackageName, d.InstalledVersion))
 	}
 	prompt := &survey.MultiSelect{
 		Message:  "select packages to remove:",
@@ -165,12 +155,7 @@ func subductDependencyFromSpec(spec *Spec) error {
 	if err != nil {
 		return err
 	}
-	list := convertPipPakcageToList(packages)
-	spec.Dependencies = make([]Dependency, len(list))
-	for i, v := range list {
-		spec.Dependencies[i].Name = v.Name
-		spec.Dependencies[i].Version = v.Version
-	}
+	spec.Dependencies = packages
 	return nil
 }
 
