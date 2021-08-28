@@ -23,7 +23,8 @@ func main() {
 	restore := app.Command("restore", "Restore a package")
 	restorePath := restore.Arg("path", "Path to the package").Required().String()
 
-	makeDockerfile := app.Command("make-dockerfile", "Create a Dockerfile")
+	makes := app.Command("make", "Make something")
+	makesDockerfile := makes.Flag("dockerfile", "Make dockerfile").Short('d').Bool()
 
 	tidy := app.Command("tidy", "Tidy up the project")
 
@@ -85,15 +86,18 @@ func main() {
 		if err := tidyUpProject("."); err != nil {
 			log.Fatal(err)
 		}
-	case makeDockerfile.FullCommand():
-		log.Println("Create Dockerfile")
+	case makes.FullCommand():
 		spec, err := readSpecFromPath(".")
 		if err != nil {
 			log.Fatal(err)
 		}
-		data := convertSpecToDockerfile(&spec)
-		if err := os.WriteFile("./dockerfile", []byte(data), 0644); err != nil {
-			log.Fatal(err)
+		if *makesDockerfile {
+			log.Println("Making Dockerfile")
+			data := convertSpecToDockerfile(&spec)
+			if err := os.WriteFile("./dockerfile", []byte(data), 0644); err != nil {
+				log.Fatal(err)
+			}
+			os.Exit(0)
 		}
 	default:
 		kingpin.Usage()
