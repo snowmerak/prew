@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"prew/pypi"
 	"regexp"
 	"strings"
 )
@@ -204,6 +205,10 @@ func tidyUpProject(path string) error {
 	}
 	log.Println("Install expected package")
 	for k := range expected {
+		_, err := pypi.GetPackageInfo(k, "")
+		if err != nil {
+			continue
+		}
 		log.Println("install: ", k)
 		if err := installPackage(k, ""); err != nil {
 			return err
