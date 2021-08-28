@@ -60,7 +60,7 @@ func makeSpecFromSurvey() Spec {
 			Name: "Version",
 			Prompt: &survey.Input{
 				Message: "python version: ",
-				Default: version,
+				Default: strings.TrimSpace(version),
 			},
 			Validate: survey.Required,
 		},
