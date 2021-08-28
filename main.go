@@ -97,7 +97,6 @@ func main() {
 			if err := os.WriteFile("./dockerfile", []byte(data), 0644); err != nil {
 				log.Fatal(err)
 			}
-			os.Exit(0)
 		}
 	default:
 		kingpin.Usage()
