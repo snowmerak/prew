@@ -28,7 +28,7 @@ func getPythonVersion() (string, error) {
 	if err != nil {
 		return "3.7.2", err
 	}
-	return strings.Split(strings.Trim(string(bs), "\n"), " ")[1], nil
+	return strings.Split(strings.Trim(string(bs), "\r\n"), " ")[1], nil
 }
 
 func installPackage(name, version string) error {
