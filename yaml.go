@@ -106,7 +106,7 @@ func appendDependencyToSpec(spec *Spec, name string) error {
 		return err
 	}
 	if e := checkPackage(name, version); e != NotExist {
-		if err := removePackage(name); err != nil {
+		if err := removePackage(name, true); err != nil {
 			return err
 		}
 	}
@@ -137,14 +137,14 @@ func selectRemovePackages(spec *Spec) []string {
 	return packages
 }
 
-func subductDependencyFromSpec(spec *Spec) error {
+func subductDependencyFromSpec(spec *Spec, yes bool) error {
 	selected := selectRemovePackages(spec)
 	fmt.Println(selected)
 	for _, v := range selected {
 		v = strings.Split(v, " == ")[0]
 		if e := checkPackage(v, ""); e != NotExist {
 			fmt.Println(e)
-			if err := removePackage(v); err != nil {
+			if err := removePackage(v, yes); err != nil {
 				return err
 			}
 		}

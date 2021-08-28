@@ -178,7 +178,7 @@ func getDependencies(path string, name string) ([]string, error) {
 	return deps, nil
 }
 
-func tidyUpProject(path string) error {
+func tidyUpProject(path string, yes bool) error {
 	used, unused, expected, err := getUnusedPackages(path)
 	if err != nil {
 		return err
@@ -204,7 +204,7 @@ func tidyUpProject(path string) error {
 			continue
 		}
 		log.Println("remove: ", k)
-		if err := removePackage(k); err != nil {
+		if err := removePackage(k, yes); err != nil {
 			return err
 		}
 	}

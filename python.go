@@ -49,12 +49,18 @@ func installPackage(name, version string) error {
 	return nil
 }
 
-func removePackage(name string) error {
+func removePackage(name string, yes bool) error {
 	cmd := exec.Command(pip3, "uninstall", name)
+	if yes {
+		cmd.Args = append(cmd.Args, "-y")
+	}
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
+	if err != nil {
+		return err
+	}
 	if err != nil {
 		return err
 	}

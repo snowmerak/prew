@@ -17,6 +17,7 @@ func main() {
 	installName := install.Arg("name", "Name of the package").Required().String()
 
 	remove := app.Command("remove", "Remove a package")
+	removeYes := remove.Flag("yes", "Remove without confirmation").Short('y').Bool()
 
 	run := app.Command("run", "Run python code")
 
@@ -27,6 +28,7 @@ func main() {
 	makesDockerfile := makes.Flag("dockerfile", "Make dockerfile").Short('d').Bool()
 
 	tidy := app.Command("tidy", "Tidy up the project")
+	tidyYes := tidy.Flag("yes", "Auto remove unused packages").Short('y').Bool()
 
 	app.Version("0.1.1")
 
@@ -62,7 +64,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		if err := subductDependencyFromSpec(&spec); err != nil {
+		if err := subductDependencyFromSpec(&spec, *removeYes); err != nil {
 			log.Fatal(err)
 		}
 		if err := writeSpecToPath(path, spec); err != nil {
@@ -83,7 +85,7 @@ func main() {
 		}
 	case tidy.FullCommand():
 		log.Println("Tidying project")
-		if err := tidyUpProject("."); err != nil {
+		if err := tidyUpProject(".", *tidyYes); err != nil {
 			log.Fatal(err)
 		}
 	case makes.FullCommand():
