@@ -13,10 +13,10 @@ import (
 
 func runPythonCode(spec Spec) error {
 	for _, d := range spec.Dependencies {
-		if e := checkPackage(d.Name, d.Version); e == ExistSameVersion {
+		if e := checkPackage(d.PackageName, d.InstalledVersion); e == ExistSameVersion {
 			continue
 		}
-		if err := installPackage(d.Name, d.Version); err != nil {
+		if err := installPackage(d.PackageName, d.InstalledVersion); err != nil {
 			return err
 		}
 	}
@@ -32,13 +32,6 @@ func getPythonVersion() (string, error) {
 }
 
 func installPackage(name, version string) error {
-	path, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	if err := activateVirtualEnv(path); err != nil {
-		return err
-	}
 	cmd := exec.Command(pip3)
 	if version != "" {
 		cmd.Args = append(cmd.Args, "install", fmt.Sprintf("%v==%v", name, version))
@@ -48,7 +41,7 @@ func installPackage(name, version string) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
 		return err
 	}
@@ -96,9 +89,9 @@ func compareVersion(a, b string) int {
 }
 
 type PipPackage struct {
-	PackageName      string       `json:"package_name"`
-	InstalledVersion string       `json:"installed_version"`
-	Dependencies     []PipPackage `json:"dependencies"`
+	PackageName      string       `json:"package_name" yaml:"name"`
+	InstalledVersion string       `json:"installed_version" yaml:"version"`
+	Dependencies     []PipPackage `json:"dependencies" yaml:"dependencies"`
 }
 
 func getDependencyTreeFrom(path string) ([]PipPackage, error) {
