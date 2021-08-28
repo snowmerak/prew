@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 )
 
@@ -26,8 +25,4 @@ func createVirtualEnv(path, version string) error {
 		version = fmt.Sprintf("%s.%s", sp[0], sp[1])
 	}
 	return runExecCommand([]string{python, "-m", "virtualenv", path, "-p", fmt.Sprintf("python%s", version)})
-}
-
-func activateVirtualEnv(path string) error {
-	return runExecCommand([]string{vpython, filepath.Join(path, activate)})
 }
