@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"prew/pypi"
 	"regexp"
+	"runtime"
 	"strings"
 )
 
@@ -93,7 +94,11 @@ func getTopLevelFromPackages(path string) (map[string]string, error) {
 		sp := strings.Split(version, ".")
 		version = sp[0] + "." + sp[1]
 	}
-	path = filepath.Join(path, "lib", "python"+version, "site-packages")
+	if runtime.GOOS == "windows" {
+		path = filepath.Join(path, "Lib", "site-packages")
+	} else {
+		path = filepath.Join(path, "lib", "python"+version, "site-packages")
+	}
 	fs, err := os.ReadDir(path)
 	if err != nil {
 		return nil, err
@@ -189,7 +194,7 @@ func tidyUpProject(path string) error {
 		}
 	}
 	for k := range unused {
-		if dep[k] {
+		if !dep[k] {
 			delete(unused, k)
 		}
 	}
