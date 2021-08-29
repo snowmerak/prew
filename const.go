@@ -7,6 +7,8 @@ var python string
 var pip3 string
 var vpython string
 
+var virtualenv = "virtualenv==20.7.2"
+
 func init() {
 	if runtime.GOOS == "windows" {
 		python = "python"
