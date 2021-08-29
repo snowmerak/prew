@@ -91,7 +91,7 @@ func selectPackageVersion(name string) (string, error) {
 	prompt := &survey.Select{
 		Message:  "select package version to install:",
 		Options:  versions,
-		PageSize: 13,
+		PageSize: 5,
 	}
 	survey.AskOne(prompt, &version)
 	return version, nil
