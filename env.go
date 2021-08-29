@@ -16,7 +16,7 @@ func runExecCommand(cmds []string) error {
 }
 
 func installVirtualEnv() error {
-	return runExecCommand([]string{python, "-m", "pip", "install", "virtualenv"})
+	return runExecCommand([]string{python, "-m", "pip", "install", virtualenv})
 }
 
 func createVirtualEnv(path, version string) error {
