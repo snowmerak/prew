@@ -117,31 +117,3 @@ func getDependencyTreeFrom(path string) ([]PipPackage, error) {
 	}
 	return *p, nil
 }
-
-func convertPipPakcageToList(p []PipPackage) []PythonPackage {
-	var packages []PythonPackage = nil
-	queue := make([]PipPackage, len(p))
-	copy(queue, p)
-	cache := map[string]bool{}
-	for len(queue) > 0 {
-		pk := queue[0]
-		queue = queue[1:]
-		packages = append(packages, PythonPackage{
-			Name:    pk.PackageName,
-			Version: pk.InstalledVersion,
-		})
-		queue = append(queue, pk.Dependencies...)
-	}
-	for i := 0; i < len(packages)/2; i++ {
-		packages[i], packages[len(packages)-1-i] = packages[len(packages)-1-i], packages[i]
-	}
-	for i := 0; i < len(packages); i++ {
-		if cache[packages[i].Name] {
-			packages = append(packages[:i], packages[i+1:]...)
-			i--
-			continue
-		}
-		cache[packages[i].Name] = true
-	}
-	return packages
-}
