@@ -32,8 +32,9 @@ func main() {
 
 	numba := app.Command("numba", "Command set of numba")
 	numbaInstall := numba.Flag("install", "Install numba").Short('i').Bool()
+	//numbaGenerate := numba.Flag("generate", "Generate numba code").Short('g').Bool()
 
-	app.Version("0.1.1")
+	app.Version("0.1.3")
 
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
 	case init.FullCommand():
