@@ -30,6 +30,9 @@ func main() {
 	tidy := app.Command("tidy", "Tidy up the project")
 	tidyYes := tidy.Flag("yes", "Auto remove unused packages").Short('y').Bool()
 
+	numba := app.Command("numba", "Command set of numba")
+	numbaInstall := numba.Flag("install", "Install numba").Short('i').Bool()
+
 	app.Version("0.1.1")
 
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
@@ -97,6 +100,29 @@ func main() {
 			log.Println("Making Dockerfile")
 			data := convertSpecToDockerfile(&spec)
 			if err := os.WriteFile("./dockerfile", []byte(data), 0644); err != nil {
+				log.Fatal(err)
+			}
+		}
+	case numba.FullCommand():
+		if *numbaInstall {
+			log.Println("Installing numba")
+			path, err := os.Getwd()
+			if err != nil {
+				log.Fatal(err)
+			}
+			spec, err := readSpecFromPath(path)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if err := installPackage("numba", "0.54.0"); err != nil {
+				log.Fatal(err)
+			}
+			packages, err := getDependencyTreeFrom(path)
+			if err != nil {
+				log.Fatal(err)
+			}
+			spec.Dependencies = packages
+			if err := writeSpecToPath(path, spec); err != nil {
 				log.Fatal(err)
 			}
 		}
