@@ -140,11 +140,9 @@ func selectRemovePackages(spec *Spec) []string {
 
 func subductDependencyFromSpec(spec *Spec, yes bool) error {
 	selected := selectRemovePackages(spec)
-	fmt.Println(selected)
 	for _, v := range selected {
 		v = strings.Split(v, " == ")[0]
 		if e := checkPackage(v, ""); e != NotExist {
-			fmt.Println(e)
 			if err := removePackage(v, yes); err != nil {
 				return err
 			}
@@ -190,7 +188,6 @@ const (
 
 func checkPackage(name, version string) int {
 	for _, p := range getInstalledPackageList() {
-		fmt.Println(p.Name, name)
 		if p.Name == name {
 			if version == "" {
 				return ExistSameVersion
