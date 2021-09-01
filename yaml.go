@@ -2,10 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/snowmerak/prew/pypi"
@@ -88,8 +88,11 @@ func selectPackageVersion(name string) (string, error) {
 	for k := range pack.Releases {
 		versions = append(versions, k)
 	}
+	sort.Slice(versions, func(i, j int) bool {
+		return versions[i] > versions[j]
+	})
 	prompt := &survey.Select{
-		Message:  "select package version to install:",
+		Message:  "package versions:",
 		Options:  versions,
 		PageSize: 5,
 	}
@@ -97,11 +100,7 @@ func selectPackageVersion(name string) (string, error) {
 	return version, nil
 }
 
-func appendDependencyToSpec(spec *Spec, name string) error {
-	version, err := selectPackageVersion(name)
-	if err != nil {
-		return err
-	}
+func appendDependencyToSpec(spec *Spec, name, version string) error {
 	path, err := os.Getwd()
 	if err != nil {
 		return err
@@ -123,37 +122,26 @@ func appendDependencyToSpec(spec *Spec, name string) error {
 	return nil
 }
 
-func selectRemovePackages(spec *Spec) []string {
-	packages := []string{}
-	names := []string{}
-	for _, d := range spec.Dependencies {
-		names = append(names, fmt.Sprintf("%s == %s", d.PackageName, d.InstalledVersion))
-	}
-	prompt := &survey.MultiSelect{
-		Message:  "select packages to remove:",
-		Options:  names,
-		PageSize: 13,
-	}
-	survey.AskOne(prompt, &packages)
-	return packages
-}
+func subductDependencyFromSpec(spec *Spec, name string, yes bool, dep bool) error {
+	target := []string{name}
 
-func subductDependencyFromSpec(spec *Spec, yes bool) error {
-	selected := selectRemovePackages(spec)
-	for _, v := range selected {
-		v = strings.Split(v, " == ")[0]
-		if e := checkPackage(v, ""); e != NotExist {
-			if err := removePackage(v, yes); err != nil {
+	if dep {
+		deps, err := getDependencies(".", name)
+		if err != nil {
+			return err
+		}
+		target = append(target, deps...)
+	}
+
+	for _, t := range target {
+		if e := checkPackage(t, ""); e != NotExist {
+			if err := removePackage(t, yes); err != nil {
 				return err
 			}
 		}
 	}
 
-	path, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	packages, err := getDependencyTreeFrom(path)
+	packages, err := getDependencyTreeFrom(".")
 	if err != nil {
 		return err
 	}

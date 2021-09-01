@@ -160,22 +160,51 @@ func getDependencies(path string, name string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	deps := []string{}
-	q := []PipPackage{}
-	for _, d := range spec.Dependencies {
-		if d.PackageName == name {
-			q = append(q, d.Dependencies...)
-		}
+	c := map[string]bool{
+		name: true,
 	}
-	for len(q) > 0 {
-		p := q[0]
-		q = q[1:]
-		if p.PackageName == name {
-			continue
+	r := map[string]bool{}
+	al := make([]PipPackage, len(spec.Dependencies))
+	copy(al, spec.Dependencies)
+
+	for len(al) > 0 {
+		p := al[0]
+		al = al[1:]
+		if c[p.PackageName] {
+			for _, d := range p.Dependencies {
+				if !c[d.PackageName] {
+					c[d.PackageName] = true
+					if strings.Contains(d.PackageName, "_") {
+						c[strings.ReplaceAll(d.PackageName, "_", "-")] = true
+					}
+					if strings.Contains(d.PackageName, "-") {
+						c[strings.ReplaceAll(d.PackageName, "-", "_")] = true
+					}
+				}
+			}
+		} else {
+			for _, d := range p.Dependencies {
+				r[d.PackageName] = true
+				if strings.Contains(d.PackageName, "_") {
+					r[strings.ReplaceAll(d.PackageName, "_", "-")] = true
+				}
+				if strings.Contains(d.PackageName, "-") {
+					r[strings.ReplaceAll(d.PackageName, "-", "_")] = true
+				}
+			}
 		}
-		deps = append(deps, p.PackageName)
-		q = append(q, p.Dependencies...)
+		al = append(al, p.Dependencies...)
 	}
+
+	for k := range r {
+		delete(c, k)
+	}
+
+	deps := make([]string, 0, len(c))
+	for k := range c {
+		deps = append(deps, k)
+	}
+
 	return deps, nil
 }
 
@@ -184,6 +213,8 @@ func tidyUpProject(path string, yes bool) error {
 	if err != nil {
 		return err
 	}
+	used["pipdeptree"] = true
+	used["mypy"] = true
 	dep := map[string]bool{}
 	for k := range used {
 		ls, err := getDependencies(path, k)
@@ -201,7 +232,7 @@ func tidyUpProject(path string, yes bool) error {
 	}
 	log.Println("Remove unused package")
 	for k := range unused {
-		if k == "pip" || k == "pipdeptree" || k == "numba" || k == "numpy" || k == "llvmlite" || k == "mypy" {
+		if k == "pip" || k == "pipdeptree" || k == "mypy" {
 			continue
 		}
 		log.Println("remove: ", k)

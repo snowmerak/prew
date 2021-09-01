@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/AlecAivazis/survey/v2"
 )
 
 func runPythonCode(spec Spec) error {
@@ -21,6 +23,59 @@ func runPythonCode(spec Spec) error {
 		}
 	}
 	return runExecCommand([]string{vpython, filepath.Join("src", spec.EntryFile)})
+}
+
+func searchPackageVersion(name string) error {
+	version, err := selectPackageVersion(name)
+	if err != nil {
+		return err
+	}
+	reply := false
+	if err := survey.AskOne(&survey.Confirm{Message: fmt.Sprintf("Do you want to install %v version %v?", name, version)}, &reply, survey.WithValidator(survey.Required)); err != nil {
+		return err
+	}
+	if reply {
+		spec, err := readSpecFromPath(".")
+		if err != nil {
+			return err
+		}
+		if err := appendDependencyToSpec(&spec, name, version); err != nil {
+			return err
+		}
+		if err := writeSpecToPath(".", spec); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func printPackages() error {
+	spec, err := readSpecFromPath(".")
+	if err != nil {
+		return err
+	}
+	packages := []string{}
+	{
+		pippackages := convertPipPakcageToList(spec.Dependencies)
+		for _, p := range pippackages {
+			packages = append(packages, p.Name)
+		}
+	}
+	selected := ""
+	survey.AskOne(&survey.Select{Message: "Select packages", Options: packages}, &selected, survey.WithPageSize(5))
+	reply := false
+	if err := survey.AskOne(&survey.Confirm{Message: fmt.Sprintf("Do you want to remove %v?", selected)}, &reply, survey.WithValidator(survey.Required)); err != nil {
+		return err
+	}
+	if reply {
+		if err := subductDependencyFromSpec(&spec, selected, false, false); err != nil {
+			return err
+		}
+		if err := writeSpecToPath(".", spec); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func getPythonVersion() (string, error) {
