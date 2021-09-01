@@ -18,7 +18,7 @@ func installMypy(path string) error {
 	if checkMypyInstalled(path) {
 		return nil
 	}
-	_, err := exec.Command(pip3, "install", "mypy").Output()
+	_, err := exec.Command(pip3, "install", "mypy==0.910").Output()
 	return err
 }
 
