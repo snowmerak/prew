@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -34,7 +37,11 @@ func main() {
 	numbaInstall := numba.Flag("install", "Install numba").Short('i').Bool()
 	//numbaGenerate := numba.Flag("generate", "Generate numba code").Short('g').Bool()
 
-	app.Version("0.1.3")
+	checkType := app.Command("check", "Check type of a python code")
+	checkTypeAll := checkType.Flag("all", "Check all files").Short('a').Bool()
+	checkTypeName := checkType.Arg("name", "Name of the file").String()
+
+	app.Version("0.2.0")
 
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
 	case init.FullCommand():
@@ -125,6 +132,38 @@ func main() {
 			spec.Dependencies = packages
 			if err := writeSpecToPath(path, spec); err != nil {
 				log.Fatal(err)
+			}
+		}
+	case checkType.FullCommand():
+		// path, err := os.Getwd()
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
+		path := "."
+		path = filepath.Join(path, "src")
+		if err := installMypy(path); err != nil {
+			log.Fatal(err)
+		}
+		if *checkTypeAll {
+			log.Println("Checking all files")
+			em, err := checkTypeFiles(path)
+			if err != nil {
+				log.Fatal(err)
+			}
+			for _, el := range em {
+				for _, e := range el {
+					fmt.Println(e)
+				}
+			}
+		}
+		if *checkTypeName != "" {
+			log.Println("Checking file", *checkTypeName)
+			el, err := checkTypeFile(path, *checkTypeName)
+			if err != nil {
+				log.Fatal(err)
+			}
+			for _, e := range el {
+				fmt.Println(strings.TrimPrefix(e, path))
 			}
 		}
 	default:
