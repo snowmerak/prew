@@ -201,7 +201,7 @@ func tidyUpProject(path string, yes bool) error {
 	}
 	log.Println("Remove unused package")
 	for k := range unused {
-		if k == "pip" || k == "pipdeptree" || k == "numba" || k == "numpy" || k == "llvmlite" {
+		if k == "pip" || k == "pipdeptree" || k == "numba" || k == "numpy" || k == "llvmlite" || k == "mypy" {
 			continue
 		}
 		log.Println("remove: ", k)
