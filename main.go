@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/snowmerak/prew/color"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -49,6 +50,7 @@ func main() {
 		if err := initProjectToDirectory(*initPath); err != nil {
 			log.Fatal(err)
 		}
+		log.Println(color.Green + "success" + color.Reset)
 	case install.FullCommand():
 		log.Println("Installing package", *installName)
 		path, err := os.Getwd()
@@ -65,6 +67,7 @@ func main() {
 		if err := writeSpecToPath(path, spec); err != nil {
 			log.Fatal(err)
 		}
+		log.Println(color.Green + "success" + color.Reset)
 	case remove.FullCommand():
 		log.Println("Removing package")
 		path, err := os.Getwd()
@@ -81,6 +84,7 @@ func main() {
 		if err := writeSpecToPath(path, spec); err != nil {
 			log.Fatal(err)
 		}
+		log.Println(color.Green + "success" + color.Reset)
 	case run.FullCommand():
 		spec, err := readSpecFromPath(".")
 		if err != nil {
@@ -94,11 +98,13 @@ func main() {
 		if err := restoreProject(*restorePath); err != nil {
 			log.Fatal(err)
 		}
+		log.Println(color.Green + "success" + color.Reset)
 	case tidy.FullCommand():
 		log.Println("Tidying project")
 		if err := tidyUpProject(".", *tidyYes); err != nil {
 			log.Fatal(err)
 		}
+		log.Println(color.Green + "success" + color.Reset)
 	case makes.FullCommand():
 		spec, err := readSpecFromPath(".")
 		if err != nil {
@@ -110,6 +116,7 @@ func main() {
 			if err := os.WriteFile("./dockerfile", []byte(data), 0644); err != nil {
 				log.Fatal(err)
 			}
+			log.Println(color.Green + "success" + color.Reset)
 		}
 	case numba.FullCommand():
 		if *numbaInstall {
@@ -152,6 +159,8 @@ func main() {
 			}
 			for _, el := range em {
 				for _, e := range el {
+					e = strings.ReplaceAll(e, "error", color.Red+"error"+color.Reset)
+					e = strings.ReplaceAll(e, "Success", color.Green+"Success"+color.Reset)
 					fmt.Println(e)
 				}
 			}
@@ -163,7 +172,9 @@ func main() {
 				log.Fatal(err)
 			}
 			for _, e := range el {
-				fmt.Println(strings.TrimPrefix(e, path))
+				e = strings.ReplaceAll(e, "error", color.Red+"error"+color.Reset)
+				e = strings.ReplaceAll(e, "Success", color.Green+"Success"+color.Reset)
+				fmt.Println(e)
 			}
 		}
 	default:
