@@ -73,6 +73,10 @@ func convertVersionToIntArray(version string) [3]int {
 	s := strings.Split(strings.TrimSpace(version), ".")
 	var err error = nil
 	for i := 0; i < 3; i++ {
+		if len(s) <= i {
+			v[i] = 0
+			continue
+		}
 		v[i], err = strconv.Atoi(s[i])
 		if err != nil {
 			return v
