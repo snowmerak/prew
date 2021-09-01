@@ -34,10 +34,6 @@ func main() {
 	tidy := app.Command("tidy", "Tidy up the project")
 	tidyYes := tidy.Flag("yes", "Auto remove unused packages").Short('y').Bool()
 
-	numba := app.Command("numba", "Command set of numba")
-	numbaInstall := numba.Flag("install", "Install numba").Short('i').Bool()
-	//numbaGenerate := numba.Flag("generate", "Generate numba code").Short('g').Bool()
-
 	checkType := app.Command("check", "Check type of a python code")
 	checkTypeAll := checkType.Flag("all", "Check all files").Short('a').Bool()
 	checkTypeName := checkType.Arg("name", "Name of the file").String()
@@ -117,29 +113,6 @@ func main() {
 				log.Fatal(err)
 			}
 			log.Println(color.Green + "success" + color.Reset)
-		}
-	case numba.FullCommand():
-		if *numbaInstall {
-			log.Println("Installing numba")
-			path, err := os.Getwd()
-			if err != nil {
-				log.Fatal(err)
-			}
-			spec, err := readSpecFromPath(path)
-			if err != nil {
-				log.Fatal(err)
-			}
-			if err := installPackage("numba", "0.54.0"); err != nil {
-				log.Fatal(err)
-			}
-			packages, err := getDependencyTreeFrom(path)
-			if err != nil {
-				log.Fatal(err)
-			}
-			spec.Dependencies = packages
-			if err := writeSpecToPath(path, spec); err != nil {
-				log.Fatal(err)
-			}
 		}
 	case checkType.FullCommand():
 		// path, err := os.Getwd()
