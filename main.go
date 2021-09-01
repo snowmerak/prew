@@ -17,11 +17,19 @@ func main() {
 	init := app.Command("init", "Initialize a new project")
 	initPath := init.Arg("path", "Path to the project").Required().String()
 
+	search := app.Command("search", "Search for a package's versions")
+	searchPackage := search.Arg("package", "Package to search for").Required().String()
+
 	install := app.Command("install", "Install a package")
 	installName := install.Arg("name", "Name of the package").Required().String()
+	installVersion := install.Arg("version", "Version of the package").String()
+
+	list := app.Command("list", "List all installed packages")
 
 	remove := app.Command("remove", "Remove a package")
+	removeName := remove.Arg("name", "Name of the package").Required().String()
 	removeYes := remove.Flag("yes", "Remove without confirmation").Short('y').Bool()
+	removeDeps := remove.Flag("deps", "Remove dependencies").Short('d').Bool()
 
 	run := app.Command("run", "Run python code")
 
@@ -47,6 +55,12 @@ func main() {
 			log.Fatal(err)
 		}
 		log.Println(color.Green + "success" + color.Reset)
+	case search.FullCommand():
+		log.Println("Searching for package " + *searchPackage)
+		if err := searchPackageVersion(*searchPackage); err != nil {
+			log.Fatal(err)
+		}
+		log.Println(color.Green + "success" + color.Reset)
 	case install.FullCommand():
 		log.Println("Installing package", *installName)
 		path, err := os.Getwd()
@@ -57,13 +71,18 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		if err := appendDependencyToSpec(&spec, *installName); err != nil {
+		if err := appendDependencyToSpec(&spec, *installName, *installVersion); err != nil {
 			log.Fatal(err)
 		}
 		if err := writeSpecToPath(path, spec); err != nil {
 			log.Fatal(err)
 		}
 		log.Println(color.Green + "success" + color.Reset)
+	case list.FullCommand():
+		log.Println("Listing all installed packages")
+		if err := printPackages(); err != nil {
+			log.Fatal(err)
+		}
 	case remove.FullCommand():
 		log.Println("Removing package")
 		path, err := os.Getwd()
@@ -74,7 +93,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		if err := subductDependencyFromSpec(&spec, *removeYes); err != nil {
+		if err := subductDependencyFromSpec(&spec, *removeName, *removeYes, *removeDeps); err != nil {
 			log.Fatal(err)
 		}
 		if err := writeSpecToPath(path, spec); err != nil {
