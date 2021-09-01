@@ -11,7 +11,8 @@ prew는 프로젝트 관리를 위한 몇가지 유용한 명령어를 제공합
 `prew init <directory>`
 
 해당 경로에 새로운 프로젝트를 생성합니다.  
-생성 시 prew는 유저에게 프로젝트 이름과 파이썬 버전을 입력하도록 요청합니다.
+생성 시 prew는 유저에게 프로젝트 이름과 파이썬 버전을 입력하도록 요청합니다.  
+가상 환경의 경우엔 virtualenv(https://github.com/pypa/virtualenv)를 사용합니다.
 
 ### run
 
@@ -56,6 +57,19 @@ prew는 pip를 그대로 사용하지만, 패키지를 설치하거나 삭제할
 
 현재 경로의 prew 프로젝트의 파이썬 파일과 spec.yaml을 비교하여 사용하지 않는 패키지를 제거합니다.  
 이 때 다른 패키지의 의존성으로 설치된 패키지는 제외됩니다.
+
+### check
+
+`prew check [<filename>] [<flag>]`
+
+현재 경로의 prew 프로젝트의 특정 파이썬 파일의 타입을 체크합니다.  
+filename을 입력하면 해당 파일만 체크하지만 -a 플래그를 입력하면 모든 파이썬 파일을 체크합니다.  
+이 기능은 mypy(https://github.com/python/mypy)를 사용합니다.
+
+## third party
+
+using virtualenv(https://github.com/pypa/virtualenv) for virtual environment  
+using mypy(https://github.com/python/mypy) to check python file type
 
 ## Special thanks
 
