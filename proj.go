@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// initProjectToDirectory initializes the project to the given directory.
 func initProjectToDirectory(path string) error {
 	spec := makeSpecFromSurvey()
 	if err := installVirtualEnv(); err != nil {
@@ -44,6 +45,7 @@ func initProjectToDirectory(path string) error {
 	return nil
 }
 
+// restoreProject restores the project from the given directory.
 func restoreProject(path string) error {
 	spec, err := readSpecFromPath(path)
 	if err != nil {

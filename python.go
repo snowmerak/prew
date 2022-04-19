@@ -1,10 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -13,6 +10,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 )
 
+// runPythonCode runs the given python file of spec.yaml and returns the output.
 func runPythonCode(spec Spec) error {
 	for _, d := range spec.Dependencies {
 		if e := checkPackage(d.PackageName, d.InstalledVersion); e == ExistSameVersion {
@@ -25,6 +23,7 @@ func runPythonCode(spec Spec) error {
 	return runExecCommand([]string{vpython, filepath.Join("src", spec.EntryFile)})
 }
 
+// searchPackageVersion searches the given package version.
 func searchPackageVersion(name string) error {
 	version, err := selectPackageVersion(name)
 	if err != nil {
@@ -49,35 +48,7 @@ func searchPackageVersion(name string) error {
 	return nil
 }
 
-func printPackages() error {
-	spec, err := readSpecFromPath(".")
-	if err != nil {
-		return err
-	}
-	packages := []string{}
-	{
-		pippackages := convertPipPakcageToList(spec.Dependencies)
-		for _, p := range pippackages {
-			packages = append(packages, p.Name)
-		}
-	}
-	selected := ""
-	survey.AskOne(&survey.Select{Message: "Select packages", Options: packages}, &selected, survey.WithPageSize(5))
-	reply := false
-	if err := survey.AskOne(&survey.Confirm{Message: fmt.Sprintf("Do you want to remove %v?", selected)}, &reply, survey.WithValidator(survey.Required)); err != nil {
-		return err
-	}
-	if reply {
-		if err := subductDependencyFromSpec(&spec, selected, false, false); err != nil {
-			return err
-		}
-		if err := writeSpecToPath(".", spec); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
+// getPythonVersion returns the python version.
 func getPythonVersion() (string, error) {
 	bs, err := exec.Command(python, "-V").Output()
 	if err != nil {
@@ -86,43 +57,7 @@ func getPythonVersion() (string, error) {
 	return strings.Split(strings.Trim(string(bs), "\r\n"), " ")[1], nil
 }
 
-func installPackage(name, version string) error {
-	cmd := exec.Command(pip3)
-	if version != "" {
-		cmd.Args = append(cmd.Args, "install", fmt.Sprintf("%v==%v", name, version))
-	} else {
-		cmd.Args = append(cmd.Args, "install", name)
-	}
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		return err
-	}
-	log.Println(name, version, "installed")
-	return nil
-}
-
-func removePackage(name string, yes bool) error {
-	cmd := exec.Command(pip3, "uninstall", name)
-	if yes {
-		cmd.Args = append(cmd.Args, "-y")
-	}
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		return err
-	}
-	if err != nil {
-		return err
-	}
-	log.Println(name, "uninstalled")
-	return nil
-}
-
+// convertVersionToIntArray converts the given version to int array.
 func convertVersionToIntArray(version string) [3]int {
 	v := [3]int{0, 0, 0}
 	s := strings.Split(strings.TrimSpace(version), ".")
@@ -140,6 +75,7 @@ func convertVersionToIntArray(version string) [3]int {
 	return v
 }
 
+// compareVersion compares the given version.
 func compareVersion(a, b string) int {
 	av := convertVersionToIntArray(a)
 	bv := convertVersionToIntArray(b)
@@ -151,28 +87,4 @@ func compareVersion(a, b string) int {
 		}
 	}
 	return 0
-}
-
-type PipPackage struct {
-	PackageName      string       `json:"package_name" yaml:"name"`
-	InstalledVersion string       `json:"installed_version" yaml:"version"`
-	Dependencies     []PipPackage `json:"dependencies" yaml:"dependencies"`
-}
-
-func getDependencyTreeFrom(path string) ([]PipPackage, error) {
-	if checkPackage("pipdeptree", "") == NotExist {
-		if err := installPackage("pipdeptree", ""); err != nil {
-			return nil, err
-		}
-	}
-	data, err := exec.Command(vpython, "-m", "pipdeptree", "--json-tree").Output()
-	if err != nil {
-		return nil, err
-	}
-	p := new([]PipPackage)
-	*p = []PipPackage{}
-	if err := json.Unmarshal(data, p); err != nil {
-		return nil, err
-	}
-	return *p, nil
 }

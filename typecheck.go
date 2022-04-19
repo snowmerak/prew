@@ -5,7 +5,8 @@ import (
 	"strings"
 )
 
-func checkMypyInstalled(path string) bool {
+// checkMypyInstalled returns true if mypy is installed.
+func checkMypyInstalled(_ string) bool {
 	cmd := exec.Command(pip3, "list")
 	data, err := cmd.Output()
 	if err != nil {
@@ -14,6 +15,7 @@ func checkMypyInstalled(path string) bool {
 	return strings.Contains(string(data), "mypy")
 }
 
+// installMypy installs mypy.
 func installMypy(path string) error {
 	if checkMypyInstalled(path) {
 		return nil
@@ -22,12 +24,14 @@ func installMypy(path string) error {
 	return err
 }
 
-func checkTypeFile(path, file string) ([]string, error) {
+// checkTypeFile checks type of given file.
+func checkTypeFile(_, file string) ([]string, error) {
 	cmd := exec.Command(vpython, "-m", "mypy", file)
 	rs, _ := cmd.Output()
 	return strings.Split(string(rs), "\n"), nil
 }
 
+// checkTypeFiles checks type of given files.
 func checkTypeFiles(path string) (map[string][]string, error) {
 	fs, err := getFileListRecursive(path)
 	if err != nil {

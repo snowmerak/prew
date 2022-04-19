@@ -2,6 +2,7 @@ package main
 
 import "strings"
 
+// convertPipPakcageToList convert pip package to list
 func convertPipPakcageToList(p []PipPackage) []PythonPackage {
 	var packages []PythonPackage = nil
 	queue := make([]PipPackage, len(p))
@@ -30,6 +31,7 @@ func convertPipPakcageToList(p []PipPackage) []PythonPackage {
 	return packages
 }
 
+// convertSpecToDockerfile convert spec dependencies to dockerfile
 func convertSpecToDockerfile(spec *Spec) string {
 	sb := strings.Builder{}
 	version := spec.Version
